@@ -1,0 +1,242 @@
+{
+  "name": "Amazon Product Collector (HTML)",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d1ca034b-3705-439e-90b6-3bd414d44355",
+      "name": "Telegram Trigger",
+      "webhookId": "e153c065-79a2-4c88-b00a-8b846beae32c",
+      "credentials": {
+        "telegramApi": {
+          "id": "GMDI8N48boVUNJE5",
+          "name": "Etsy Ürün Toplayıcı (Apify)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  amazon_url: $json.message.text\n}]\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "fcfa21b2-b77f-4d8b-bd19-e40587ff6446",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.amazon_url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0 Safari/537.36"
+            },
+            {
+              "name": "Accept-Language",
+              "value": "en-US,en;q=0.9"
+            },
+            {
+              "name": "Referer",
+              "value": "https://www.amazon.com/"
+            },
+            {
+              "name": "Accept",
+              "value": "text/html"
+            },
+            {
+              "name": "Cache-Control",
+              "value": "no-cache"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        416,
+        0
+      ],
+      "id": "993819a4-d36b-46fa-acf1-3612163a69c6",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "title",
+              "cssSelector": "#productTitle"
+            },
+            {
+              "key": "price",
+              "cssSelector": "#corePriceDisplay_desktop_feature_div .a-price-whole"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        624,
+        0
+      ],
+      "id": "b3cab433-20b2-4ece-b5ec-f4dc94560b91",
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1_I3rpY1pmBoVV6IH46xcsOdIk1gg7c3JrSqy5QM7OtA",
+          "mode": "list",
+          "cachedResultName": "Etsy Ürün Toplayıcı",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1_I3rpY1pmBoVV6IH46xcsOdIk1gg7c3JrSqy5QM7OtA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Ürünler",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1_I3rpY1pmBoVV6IH46xcsOdIk1gg7c3JrSqy5QM7OtA/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Ürün Adı": "={{ $json.title }}",
+            "Fiyat": "={{ $json.price }}",
+            "Link": "={{ $('Telegram Trigger').item.json.message.text }}"
+          },
+          "matchingColumns": [
+            "Ürün Adı"
+          ],
+          "schema": [
+            {
+              "id": "Ürün Adı",
+              "displayName": "Ürün Adı",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Fiyat",
+              "displayName": "Fiyat",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Link",
+              "displayName": "Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        864,
+        0
+      ],
+      "id": "5407f730-227d-4861-a67b-7b3187d2f5b0",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "r0gfPIl69i9oXG48",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "136a6d13-8074-4709-a9ab-b2dcdd487ecb",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8c4e8078bf97ee99d530a36c68f00f99341d0e2a98abf6291c2585d1a00be68a"
+  },
+  "id": "ztPqoLGZfXkigGytCPetz",
+  "tags": []
+}
